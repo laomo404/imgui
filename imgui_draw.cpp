@@ -1,4 +1,4 @@
-// dear imgui, v1.92.0 WIP
+﻿// dear imgui, v1.92.0 WIP
 // (drawing and font code)
 
 /*
@@ -37,6 +37,12 @@ Index of this file:
 #include "imgui_internal.h"
 #ifdef IMGUI_ENABLE_FREETYPE
 #include "misc/freetype/imgui_freetype.h"
+#endif
+
+// 如果是windows，则使用自定义渲染
+#ifdef _WIN32
+#include "TextRender/WindowsTextRenderer.h"
+extern WindowsTextRenderer* g_text_renderer;
 #endif
 
 #include <stdio.h>      // vsnprintf, sscanf, printf
@@ -1707,6 +1713,15 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
     if (text_begin == text_end || text_begin[0] == 0)
         return;
     // No need to strlen() here: font->RenderText() will do it and may early out.
+
+#ifdef _WIN32
+    if (g_text_renderer)
+    {
+        // 这里假设 g_text_renderer->RenderText 支持 ImDrawList*、const char*、const char*、ImVec2、ImU32
+        g_text_renderer->RenderText(this, text_begin, text_end, pos, col);
+        return;
+    }
+#endif
 
     // Pull default font/size from the shared ImDrawListSharedData instance
     if (font == NULL)
